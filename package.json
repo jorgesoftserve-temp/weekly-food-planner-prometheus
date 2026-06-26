@@ -10,10 +10,12 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @recipe-box/web test",
     "db:reset": "pnpm --filter @recipe-box/supabase db:reset",
-    "db:gen:types": "pnpm --filter @recipe-box/supabase db:gen:types"
+    "db:gen:types": "pnpm --filter @recipe-box/supabase db:gen:types",
+    "record": "node scripts/record-demo.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "playwright": "^1.49.0",
     "typescript": "^5.7.2"
   }
 }
