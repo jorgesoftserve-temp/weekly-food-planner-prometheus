@@ -11,7 +11,8 @@
     "test": "pnpm --filter @recipe-box/web test",
     "db:reset": "pnpm --filter @recipe-box/supabase db:reset",
     "db:gen:types": "pnpm --filter @recipe-box/supabase db:gen:types",
-    "record": "node scripts/record-demo.mjs"
+    "record": "node --env-file=apps/web/.env.local scripts/record-demo.mjs",
+    "e2e": "node --env-file=apps/web/.env.local scripts/audit.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

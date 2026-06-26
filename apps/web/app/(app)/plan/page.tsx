@@ -38,7 +38,7 @@ const addDays = (d: Date, n: number): Date => {
 const formatWeekLabel = (monday: Date): string => {
   const end = addDays(monday, 6)
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
-  return `${monday.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}, ${end.getFullYear()}`
+  return `${monday.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}, ${end.getFullYear()}`
 }
 
 // ── Cell picker ───────────────────────────────────────────────────────────────

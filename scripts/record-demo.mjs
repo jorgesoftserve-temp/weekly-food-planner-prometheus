@@ -19,12 +19,13 @@ import { mkdir } from 'fs/promises'
 const NEXT_URL       = process.env.NEXT_URL                  ?? 'http://localhost:3000'
 const SUPABASE_URL   = process.env.NEXT_PUBLIC_SUPABASE_URL  ?? 'http://127.0.0.1:54421'
 
-// Standard local Supabase JWT keys — the same for every local project.
+// Local Supabase JWT keys — loaded from apps/web/.env.local via --env-file.
+// Run `supabase status` inside packages/supabase/ if these need to be refreshed.
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.OVNG5wLCEG1-YmP-k6xhbkLpBHFSVoHfZo9-4M3tZ54'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hj04zWl196z2-SJBo'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
 
 const DEMO_EMAIL    = 'demo@recipe-box.local'
 const DEMO_PASSWORD = 'DemoPass9!rBx'
@@ -58,32 +59,6 @@ async function signIn() {
   return res.json() // { access_token, refresh_token, expires_in, token_type, user }
 }
 
-/**
- * @supabase/ssr stores the session as one or more cookies named
- * `sb-<hostname>-auth-token[.<chunk>]`, chunked at 3 180 chars.
- * We replicate that format so the server client can read the session.
- */
-function buildAuthCookies(session, domain) {
-  const hostname  = new URL(SUPABASE_URL).hostname          // e.g. 127.0.0.1
-  const cookieKey = `sb-${hostname}-auth-token`
-  const value     = JSON.stringify(session)
-  const CHUNK     = 3180
-  const base      = { domain, path: '/', secure: false, httpOnly: false, sameSite: 'Lax' }
-
-  if (value.length <= CHUNK) {
-    return [{ name: cookieKey, value, ...base }]
-  }
-
-  const cookies = []
-  for (let i = 0; i * CHUNK < value.length; i++) {
-    cookies.push({
-      name: `${cookieKey}.${i}`,
-      value: value.slice(i * CHUNK, (i + 1) * CHUNK),
-      ...base,
-    })
-  }
-  return cookies
-}
 
 // ─── Page helpers ─────────────────────────────────────────────────────────────
 
@@ -93,7 +68,7 @@ function planCell(page, slot, dayIndex) {
   // dayIndex + 1 skips the label column (nth() is 0-indexed).
   return page
     .locator('tbody tr')
-    .filter({ hasText: new RegExp(`^${slot}$`, 'i') })
+    .filter({ hasText: new RegExp(slot, 'i') })
     .locator('td')
     .nth(dayIndex + 1)
 }
@@ -107,12 +82,6 @@ async function main() {
   console.log('► Creating / verifying demo user…')
   await ensureTestUser()
 
-  console.log('► Signing in…')
-  const session = await signIn()
-
-  const nextHost    = new URL(NEXT_URL).hostname // 'localhost'
-  const authCookies = buildAuthCookies(session, nextHost)
-
   // ── Browser launch ──────────────────────────────────────────────────────────
   const browser = await chromium.launch({ headless: false, slowMo: 550 })
   const context = await browser.newContext({
@@ -120,13 +89,19 @@ async function main() {
     recordVideo: { dir: OUTPUT_DIR, size: { width: 1280, height: 800 } },
   })
 
-  await context.addCookies(authCookies)
   const page = await context.newPage()
 
   try {
+    // ── Login via UI so @supabase/ssr sets cookies with the correct name ──────
+    console.log('► Signing in via login form…')
+    await page.goto(NEXT_URL, { waitUntil: 'networkidle' })
+    await page.fill('#email', DEMO_EMAIL)
+    await page.fill('#password', DEMO_PASSWORD)
+    await page.click('button:has-text("Sign in")')
+    await page.waitForURL(`${NEXT_URL}/recipes`, { timeout: 15000 })
+
     // ── Scene 1: Land on /recipes (empty state) ───────────────────────────────
     console.log('Scene 1 — Recipes empty state')
-    await page.goto(`${NEXT_URL}/recipes`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(1800)
 
     // ── Scene 2: Create "Pasta Carbonara" ─────────────────────────────────────
@@ -243,17 +218,17 @@ async function main() {
 
     await planCell(page, 'breakfast', 0).locator('button:has-text("+ add")').click()
     await page.waitForSelector('text=Pick a recipe')
-    await page.click('button:has-text("Avocado Toast")')
+    await page.locator('[role="dialog"]').locator('button:has-text("Avocado Toast")').click()
     await page.waitForTimeout(600)
 
     await planCell(page, 'lunch', 2).locator('button:has-text("+ add")').click()
     await page.waitForSelector('text=Pick a recipe')
-    await page.click('button:has-text("Greek Salad")')
+    await page.locator('[role="dialog"]').locator('button:has-text("Greek Salad")').click()
     await page.waitForTimeout(600)
 
     await planCell(page, 'dinner', 2).locator('button:has-text("+ add")').click()
     await page.waitForSelector('text=Pick a recipe')
-    await page.click('button:has-text("Pasta Carbonara")')
+    await page.locator('[role="dialog"]').locator('button:has-text("Pasta Carbonara")').click()
     await page.waitForTimeout(1000)
 
     // ── Scene 9: Clear Wednesday Dinner and replace ────────────────────────────
@@ -263,7 +238,7 @@ async function main() {
 
     await planCell(page, 'dinner', 2).locator('button:has-text("+ add")').click()
     await page.waitForSelector('text=Pick a recipe')
-    await page.click('button:has-text("Avocado Toast")')
+    await page.locator('[role="dialog"]').locator('button:has-text("Avocado Toast")').click()
     await page.waitForTimeout(1000)
 
     // ── Scene 10: Navigate weeks ──────────────────────────────────────────────

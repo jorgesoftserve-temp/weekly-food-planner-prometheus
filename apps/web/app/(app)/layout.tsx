@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { supabaseServerClient } from '@/utils/supabase/server'
 import { UserProvider } from '@/contexts/user-context'
+import { SignOutButton } from '@/app/_components/sign-out-button'
 
 export default async function AppLayout({
   children,
@@ -25,6 +26,7 @@ export default async function AppLayout({
           <a href="/plan" className="text-sm text-gray-600 hover:text-gray-900">
             Plan
           </a>
+          <SignOutButton />
         </nav>
         <main className="flex-1 px-6 py-8 max-w-6xl mx-auto w-full">
           {children}
