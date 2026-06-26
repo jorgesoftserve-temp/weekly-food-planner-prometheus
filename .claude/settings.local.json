@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat ~/.cursor/mcp.json 2>/dev/null; echo \"---PROJECT---\"; cat \".cursor/mcp.json\" 2>/dev/null; echo \"---DONE---\")",
+      "Read(//c/Users/jzapa/.cursor/**)",
+      "Bash(claude mcp *)",
+      "Bash(node -e \"const c=require\\('C:/Users/jzapa/.claude.json'\\); console.log\\('top-level mcpServers:', JSON.stringify\\(c.mcpServers||{},null,2\\)\\); console.log\\('--- projects with mcpServers ---'\\); for\\(const[k,v] of Object.entries\\(c.projects||{}\\)\\){ if\\(v.mcpServers && Object.keys\\(v.mcpServers\\).length\\){ console.log\\(k, JSON.stringify\\(v.mcpServers\\)\\); } }\")",
+      "Bash(node -e \"const c=require\\('C:/Users/jzapa/.claude.json'\\); console.log\\('top-level mcpServers:', JSON.stringify\\(c.mcpServers,null,2\\)\\)\")",
+      "PowerShell(ls \"$env:APPDATA\\\\Claude\\\\\" 2>&1)",
+      "mcp__Deployment__get_platform_guide",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\jzapa\\\\Documents\\\\Softserve\\\\Prometheus-test\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem -Recurse -Path \"c:\\\\Users\\\\jzapa\\\\Documents\\\\Softserve\\\\Prometheus-test\\\\packages\\\\supabase\" -Directory | Select-Object FullName | Where-Object { $_.FullName -notmatch 'node_modules|\\\\.pnpm|\\\\.branches|\\\\.temp' })",
+      "mcp__Deployment__skills_search"
+    ]
+  }
+}

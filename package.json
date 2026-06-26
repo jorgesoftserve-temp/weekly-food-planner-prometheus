@@ -1,0 +1,19 @@
+{
+  "name": "recipe-box",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @recipe-box/web test",
+    "db:reset": "pnpm --filter @recipe-box/supabase db:reset",
+    "db:gen:types": "pnpm --filter @recipe-box/supabase db:gen:types"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

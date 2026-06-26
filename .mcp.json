@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "Deployment": {
+      "type": "http",
+      "url": "https://mcpdevapim.azure-api.net/sdlc-deployment/mcp"
+    }
+  }
+}
